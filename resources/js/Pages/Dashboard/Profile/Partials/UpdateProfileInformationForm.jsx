@@ -9,9 +9,9 @@ import { Link, useForm, usePage } from '@inertiajs/react';
 export default function UpdateProfileInformation({
     mustVerifyEmail,
     status,
+    user,
     className = '',
 }) {
-    const user = usePage().props.auth.user;
     const nameInputRef = useRef(null);
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =

@@ -1,5 +1,2 @@
-# TODO: Replace hardcoded user data in dashboard with logged-in user data
-
--   [x] Edit app/Http/Controllers/Dashboard.php to pass authenticated user to Inertia view
--   [x] Edit resources/js/Pages/Dashboard.jsx to retrieve user from props and pass to AppSidebar
--   [x] Edit resources/js/Components/app-sidebar.jsx to accept user prop and use it instead of hardcoded data
+- [x] Fix pagination links in resources/js/Pages/Dashboard/Users/Index.jsx to conditionally render Link only when link.url is not null, preventing null reference error in Inertia's mergeDataIntoQueryString.
+- [x] Test the users dashboard page to ensure pagination works correctly without errors.

@@ -11,6 +11,7 @@ import {
   Send,
   Settings2,
   SquareTerminal,
+  User,
 } from "lucide-react";
 
 import { NavMain } from "@/Components/nav-main";
@@ -34,6 +35,25 @@ const data = {
       url: route('dashboard'),
       icon: LayoutDashboard,
       isActive: window.location.pathname === route('dashboard') || window.location.pathname.startsWith('/dashboard'),
+    },
+    {
+      title: "Users",
+      url: route('dashboard.users.index'),
+      icon: User,
+      items: [
+        {
+          title: "History",
+          url: "#",
+        },
+        {
+          title: "Starred",
+          url: "#",
+        },
+        {
+          title: "Settings",
+          url: "#",
+        },
+      ],
     },
     {
       title: "Playground",

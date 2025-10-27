@@ -22,6 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/profile', [ProfileController::class, 'edit'])->name('dashboard.profile.edit');
     Route::patch('/dashboard/profile', [ProfileController::class, 'update'])->name('dashboard.profile.update');
     Route::delete('/dashboard/profile', [ProfileController::class, 'destroy'])->name('dashboard.profile.destroy');
+
+    Route::resource('/dashboard/users', \App\Http\Controllers\Dashboard\UserController::class, ['as' => 'dashboard']);
+    Route::delete('/dashboard/users/bulk-delete', [\App\Http\Controllers\Dashboard\UserController::class, 'bulkDelete'])->name('dashboard.users.bulk-delete');
 });
 
 require __DIR__ . '/auth.php';

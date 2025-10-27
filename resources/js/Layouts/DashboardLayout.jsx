@@ -8,7 +8,7 @@ import {
     SidebarTrigger,
 } from "@/Components/ui/sidebar";
 import { usePage } from "@inertiajs/react";
-import { Separator } from "@radix-ui/react-dropdown-menu";
+import { Separator } from "@/Components/ui/separator";
 
 export default function DashboardLayout({ children, breadcrumb = [] }) {
     const { user } = usePage().props;

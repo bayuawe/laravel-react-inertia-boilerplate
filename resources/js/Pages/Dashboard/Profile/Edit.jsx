@@ -4,7 +4,7 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import DashboardLayout from "@/Layouts/DashboardLayout";
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit({ mustVerifyEmail, status, user }) {
     const breadcrumb = [
         { title: "Dashboard", url: route('dashboard') },
         { title: "Profile" }
@@ -19,6 +19,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                         <UpdateProfileInformationForm
                             mustVerifyEmail={mustVerifyEmail}
                             status={status}
+                            user={user}
                             className="max-w-xl"
                         />
                     </div>
