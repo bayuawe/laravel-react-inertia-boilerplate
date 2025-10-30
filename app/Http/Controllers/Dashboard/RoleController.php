@@ -35,7 +35,7 @@ class RoleController extends Controller implements HasMiddleware
         $roles = Role::query()
             ->with('permissions')
             ->when(request()->search, fn($query) => $query->where('name', 'like', '%' . request()->search . '%'))
-            ->select('id', 'name')
+            ->select('id', 'name', 'created_at')
             ->latest()
             ->paginate(10)
             ->withQueryString();

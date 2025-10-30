@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { NavMain } from "@/Components/nav-main";
-import { NavProjects } from "@/Components/nav-projects";
+import { NavSettings } from "@/Components/nav-settings";
 import { NavSecondary } from "@/Components/nav-secondary";
 import { NavUser } from "@/Components/nav-user";
 import {
@@ -68,29 +68,29 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Support",
+      title: "Other Menu 1",
       url: "#",
       icon: LifeBuoy,
     },
     {
-      title: "Feedback",
+      title: "Other Menu 2",
       url: "#",
       icon: Send,
     },
   ],
-  projects: [
+  settings: [
     {
-      name: "Design Engineering",
+      name: "Setting 1",
       url: "#",
       icon: Frame,
     },
     {
-      name: "Sales & Marketing",
+      name: "Setting 2",
       url: "#",
       icon: PieChart,
     },
     {
-      name: "Travel",
+      name: "Setting 3",
       url: "#",
       icon: Map,
     },
@@ -127,7 +127,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={allowedItems} />
-        <NavProjects projects={data.projects} />
+        <NavSettings settings={data.settings} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

@@ -29,7 +29,7 @@ class PermissionController extends Controller implements HasMiddleware
     {
         $permissions = Permission::query()
             ->when(request()->search, fn($query) => $query->where('name', 'like', '%' . request()->search . '%'))
-            ->select('id', 'name')
+            ->select('id', 'name', 'created_at')
             ->latest()
             ->paginate(10)
             ->withQueryString();
