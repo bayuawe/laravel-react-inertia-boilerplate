@@ -1,7 +1,5 @@
 import * as React from "react";
 import {
-  BookOpen,
-  Bot,
   Command,
   Frame,
   LayoutDashboard,
@@ -9,8 +7,8 @@ import {
   Map,
   PieChart,
   Send,
-  Settings2,
-  SquareTerminal,
+  Shield,
+  ShieldBanIcon,
   User,
 } from "lucide-react";
 
@@ -32,112 +30,40 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: route('dashboard'),
+      url: route('dashboard.index'),
       icon: LayoutDashboard,
-      isActive: window.location.pathname === route('dashboard') || window.location.pathname.startsWith('/dashboard'),
+      isActive: window.location.pathname === route('dashboard.index') || window.location.pathname.startsWith('/dashboard'),
+      role: 'dashboard-access',
     },
     {
       title: "Users",
-      url: route('dashboard.users.index'),
+      url: "#",
       icon: User,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "User List",
+          url: route('dashboard.users.index'),
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Add New User",
+          url: route('dashboard.users.create'),
         },
       ],
+      role: 'users-access',
     },
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
+      title: "Roles",
+      url: route('dashboard.roles.index'),
+      icon: Shield,
+      isActive: window.location.pathname === route('dashboard.roles.index') || window.location.pathname.startsWith('/dashboard/roles'),
+      role: 'roles-access',
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
+      title: "Permissions",
+      url: route('dashboard.permissions.index'),
+      icon: ShieldBanIcon,
+      isActive: window.location.pathname === route('dashboard.permissions.index') || window.location.pathname.startsWith('/dashboard/permissions'),
+      role: 'permissions-access',
     },
   ],
   navSecondary: [
@@ -175,6 +101,10 @@ export function AppSidebar({
   user,
   ...props
 }) {
+  const userRoles = user.roles ? user.roles.map(role => role.name) : [];
+  const isSuperAdmin = userRoles.includes('super-admin');
+  const allowedItems = isSuperAdmin ? data.navMain : data.navMain.filter(item => userRoles.includes(item.role));
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -196,7 +126,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={allowedItems} />
         <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

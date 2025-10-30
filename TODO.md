@@ -1,2 +1,6 @@
-- [x] Fix pagination links in resources/js/Pages/Dashboard/Users/Index.jsx to conditionally render Link only when link.url is not null, preventing null reference error in Inertia's mergeDataIntoQueryString.
-- [x] Test the users dashboard page to ensure pagination works correctly without errors.
+-   [x] Install react-toastify
+-   [x] Setup ToastContainer in app.jsx
+-   [x] Add toast notifications for Create user
+-   [x] Add toast notifications for Edit user
+-   [x] Add toast notifications for Delete user
+-   [x] Add confirmation popup for delete operations

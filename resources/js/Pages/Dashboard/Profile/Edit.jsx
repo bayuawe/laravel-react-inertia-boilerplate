@@ -6,7 +6,7 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 
 export default function Edit({ mustVerifyEmail, status, user }) {
     const breadcrumb = [
-        { title: "Dashboard", url: route('dashboard') },
+        { title: "Dashboard", url: route('dashboard.index') },
         { title: "Profile" }
     ];
 

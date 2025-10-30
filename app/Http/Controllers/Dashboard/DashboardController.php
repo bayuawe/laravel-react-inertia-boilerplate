@@ -4,17 +4,28 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 
-class DashboardController extends Controller
+class DashboardController extends Controller implements HasMiddleware
 {
+    /**
+     * middleware
+     */
+    public static function middleware()
+    {
+        return [
+            new Middleware('permission:dashboard-access')
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
-
+        // render view
         return inertia('Dashboard/Index', [
             'user' => Auth::user(),
         ]);

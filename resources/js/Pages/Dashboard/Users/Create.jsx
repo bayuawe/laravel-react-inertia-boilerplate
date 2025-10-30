@@ -2,12 +2,14 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { Checkbox } from '@/Components/ui/checkbox';
 import InputError from '@/Components/InputError';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import { toast } from 'react-toastify';
 
-export default function Create() {
+export default function Create({ roles }) {
     const breadcrumb = [
-        { title: "Dashboard", url: route('dashboard') },
+        { title: "Dashboard", url: route('dashboard.index') },
         { title: "Users", url: route('dashboard.users.index') },
         { title: "Create" }
     ];
@@ -17,11 +19,19 @@ export default function Create() {
         email: '',
         password: '',
         password_confirmation: '',
+        selectedRoles: [],
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('dashboard.users.store'));
+        post(route('dashboard.users.store'), {
+            onSuccess: () => {
+                toast.success('User created successfully!');
+            },
+            onError: () => {
+                toast.error('Failed to create user.');
+            },
+        });
     };
 
     return (
@@ -85,6 +95,31 @@ export default function Create() {
                                 autoComplete="new-password"
                             />
                             <InputError message={errors.password_confirmation} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Roles</Label>
+                            <div className="space-y-2">
+                                {roles.map((role) => (
+                                    <div key={role.id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`role-${role.id}`}
+                                            checked={data.selectedRoles.includes(role.id)}
+                                            onCheckedChange={(checked) => {
+                                                if (checked) {
+                                                    setData('selectedRoles', [...data.selectedRoles, role.id]);
+                                                } else {
+                                                    setData('selectedRoles', data.selectedRoles.filter(id => id !== role.id));
+                                                }
+                                            }}
+                                        />
+                                        <Label htmlFor={`role-${role.id}`} className="text-sm font-normal">
+                                            {role.name}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                            <InputError message={errors.selectedRoles} />
                         </div>
 
                         <div className="flex gap-4">

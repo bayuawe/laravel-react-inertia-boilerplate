@@ -1,14 +1,16 @@
 import React from "react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { Head } from "@inertiajs/react";
 
 export default function Page() {
   const breadcrumb = [
-    { title: "Dashboard", url: route('dashboard') },
+    { title: "Dashboard", url: route('dashboard.index') },
     { title: "Home" }
   ];
 
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
+      <Head title="Dashboard" />
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="aspect-video rounded-xl bg-muted/50" />

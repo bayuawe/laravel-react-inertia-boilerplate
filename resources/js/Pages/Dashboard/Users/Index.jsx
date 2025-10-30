@@ -2,26 +2,30 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import { toast } from 'react-toastify';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/Components/ui/alert-dialog';
 
-export default function Index({ users, filters }) {
+export default function Index({ users }) {
     const [selectedUsers, setSelectedUsers] = useState([]);
-    const [search, setSearch] = useState(filters.search || '');
-    // Use a non-empty sentinel for the Select component (Radix requires Select.Item values to be non-empty).
-    // Map 'all' -> '' when sending requests so the backend still receives an empty string for "no filter".
-    const initialVerified = (filters && (filters.verified === undefined || filters.verified === null || filters.verified === ''))
-        ? 'all'
-        : String(filters.verified);
-    const [verified, setVerified] = useState(initialVerified);
+    const [search, setSearch] = useState('');
 
     const breadcrumb = [
-        { title: "Dashboard", url: route('dashboard') },
+        { title: "Dashboard", url: route('dashboard.index') },
         { title: "Users" }
     ];
 
@@ -44,31 +48,20 @@ export default function Index({ users, filters }) {
     const handleBulkDelete = () => {
         if (selectedUsers.length === 0) return;
 
-        if (confirm(`Are you sure you want to delete ${selectedUsers.length} user(s)?`)) {
-            router.delete(route('dashboard.users.bulk-delete'), {
-                data: { user_ids: selectedUsers },
-                onSuccess: () => setSelectedUsers([]),
-            });
-        }
-    };
-
-    const handleSearch = () => {
-        const verifiedParam = verified === 'all' ? '' : verified;
-        router.get(route('dashboard.users.index'), {
-            search,
-            verified: verifiedParam,
-        }, {
-            preserveState: true,
-            replace: true,
+        router.delete(route('dashboard.users.destroy', selectedUsers.join(',')), {
+            onSuccess: () => {
+                setSelectedUsers([]);
+                toast.success(`${selectedUsers.length} user(s) deleted successfully!`);
+            },
+            onError: () => {
+                toast.error('Failed to delete user(s).');
+            },
         });
     };
 
-    const handleFilterChange = (value) => {
-        setVerified(value);
-        const verifiedParam = value === 'all' ? '' : value;
+    const handleSearch = () => {
         router.get(route('dashboard.users.index'), {
             search,
-            verified: verifiedParam,
         }, {
             preserveState: true,
             replace: true,
@@ -93,7 +86,6 @@ export default function Index({ users, filters }) {
                 {/* Filters */}
                 <div className="flex gap-4 items-end">
                     <div className="flex-1">
-                        <Label htmlFor="search">Search</Label>
                         <div className="relative">
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -106,20 +98,6 @@ export default function Index({ users, filters }) {
                             />
                         </div>
                     </div>
-                    <div className="w-48">
-                        <Label htmlFor="verified">Email Verified</Label>
-                        <Select value={verified} onValueChange={handleFilterChange}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="All" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {/* Radix Select.Item values must not be empty strings; use 'all' as a sentinel */}
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="1">Verified</SelectItem>
-                                <SelectItem value="0">Unverified</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
                     <Button onClick={handleSearch}>Search</Button>
                 </div>
 
@@ -127,10 +105,28 @@ export default function Index({ users, filters }) {
                 {selectedUsers.length > 0 && (
                     <div className="flex items-center gap-2 p-2 bg-muted rounded">
                         <span className="text-sm">{selectedUsers.length} selected</span>
-                        <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Selected
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Selected
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete {selectedUsers.length} user(s) and remove their data from our servers.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 )}
 
@@ -145,8 +141,10 @@ export default function Index({ users, filters }) {
                                         onCheckedChange={handleSelectAll}
                                     />
                                 </TableHead>
+                                <TableHead>Avatar</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Email</TableHead>
+                                <TableHead>Roles</TableHead>
                                 <TableHead>Verified</TableHead>
                                 <TableHead>Created At</TableHead>
                                 <TableHead className="w-12"></TableHead>
@@ -161,8 +159,30 @@ export default function Index({ users, filters }) {
                                             onCheckedChange={(checked) => handleSelectUser(user.id, checked)}
                                         />
                                     </TableCell>
+                                    <TableCell>
+                                        {user.avatar ? (
+                                            <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-700">
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="font-medium">{user.name}</TableCell>
                                     <TableCell>{user.email}</TableCell>
+                                    <TableCell>
+                                        {user.roles && user.roles.length > 0 ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {user.roles.map((role) => (
+                                                    <span key={role.id} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                                        {role.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-500">No roles</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell>
                                         {user.email_verified_at ? (
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
@@ -193,16 +213,42 @@ export default function Index({ users, filters }) {
                                                         Edit
                                                     </Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    className="text-red-600"
-                                                    onClick={() => {
-                                                        if (confirm('Are you sure you want to delete this user?')) {
-                                                            router.delete(route('dashboard.users.destroy', user.id));
-                                                        }
-                                                    }}
-                                                >
-                                                    Delete
-                                                </DropdownMenuItem>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <DropdownMenuItem
+                                                            className="text-red-600"
+                                                            onSelect={(e) => e.preventDefault()}
+                                                        >
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete the user "{user.name}" and remove their data from our servers.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => {
+                                                                    router.delete(route('dashboard.users.destroy', user.id), {
+                                                                        onSuccess: () => {
+                                                                            toast.success('User deleted successfully!');
+                                                                        },
+                                                                        onError: () => {
+                                                                            toast.error('Failed to delete user.');
+                                                                        },
+                                                                    });
+                                                                }}
+                                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                            >
+                                                                Delete
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -223,11 +269,10 @@ export default function Index({ users, filters }) {
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    className={`px-3 py-2 text-sm rounded ${
-                                        link.active
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:bg-muted'
-                                    }`}
+                                    className={`px-3 py-2 text-sm rounded ${link.active
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:bg-muted'
+                                        }`}
                                     preserveScroll
                                 >
                                     {link.label.replace('&laquo;', '«').replace('&raquo;', '»')}

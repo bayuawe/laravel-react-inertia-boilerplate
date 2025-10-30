@@ -4,7 +4,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout';
 
 export default function Show({ user }) {
     const breadcrumb = [
-        { title: "Dashboard", url: route('dashboard') },
+        { title: "Dashboard", url: route('dashboard.index') },
         { title: "Users", url: route('dashboard.users.index') },
         { title: user.name }
     ];
@@ -26,7 +26,7 @@ export default function Show({ user }) {
                     </div>
                 </div>
 
-                <div className="max-w-2xl">
+                <div className="w-full">
                     <div className="bg-white p-6 shadow sm:rounded-lg dark:bg-sidebar">
                         <dl className="space-y-4">
                             <div>
@@ -55,6 +55,22 @@ export default function Show({ user }) {
                                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Created At</dt>
                                 <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
                                     {new Date(user.created_at).toLocaleString()}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Roles</dt>
+                                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                    {user.roles && user.roles.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1">
+                                            {user.roles.map((role) => (
+                                                <span key={role.id} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                                    {role.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-500">No roles assigned</span>
+                                    )}
                                 </dd>
                             </div>
                             <div>

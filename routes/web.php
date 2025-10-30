@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\PermissionController;
+use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -15,16 +18,46 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Route::middleware(['auth', 'verified', 'middleware' => ['auth'], function())
+//     ->prefix('dashboard')
+//     ->as('dashboard.')
+//     ->group(function () {
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+//         // Dashboard utama
+//         Route::get('/', [DashboardController::class, 'index'])->name('index');
 
-    Route::get('/dashboard/profile', [ProfileController::class, 'edit'])->name('dashboard.profile.edit');
-    Route::patch('/dashboard/profile', [ProfileController::class, 'update'])->name('dashboard.profile.update');
-    Route::delete('/dashboard/profile', [ProfileController::class, 'destroy'])->name('dashboard.profile.destroy');
+//         // Profile
+//         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+//         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+//         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('/dashboard/users', \App\Http\Controllers\Dashboard\UserController::class, ['as' => 'dashboard']);
-    Route::delete('/dashboard/users/bulk-delete', [\App\Http\Controllers\Dashboard\UserController::class, 'bulkDelete'])->name('dashboard.users.bulk-delete');
+//         // Permissions
+//         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+
+//         // Roles
+//         Route::resource('/roles', RoleController::class)->except(['create', 'edit', 'show']);
+
+//         // Users
+//         Route::resource('/users', UserController::class)->except('show');
+//     });
+
+Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.', 'middleware' => ['auth', 'permission:dashboard-access']], function () {
+    // Dashboard utama
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Permissions
+    Route::resource('/permissions', PermissionController::class);
+
+    // Roles
+    Route::resource('/roles', RoleController::class);
+
+    // Users
+    Route::resource('/users', UserController::class);
 });
 
 require __DIR__ . '/auth.php';

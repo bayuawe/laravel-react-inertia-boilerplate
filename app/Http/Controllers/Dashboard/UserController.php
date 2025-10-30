@@ -3,144 +3,158 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
+    /**
+     * middleware
+     */
+    public static function middleware()
+    {
+        return [
+            new Middleware('permission:users-data', only: ['index', 'show']),
+            new Middleware('permission:users-create', only: ['create']),
+            new Middleware('permission:users-update', only: ['update']),
+            new Middleware('permission:users-destroy', only: ['destroy']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
+    public function index()
     {
-        $query = User::query();
+        // get all users data
+        $users = User::query()
+            ->with('roles')
+            ->when(request()->search, fn($query) => $query->where('name', 'like', '%' . request()->search . '%')->orWhere('email', 'like', '%' . request()->search . '%'))
+            ->select('id', 'name', 'avatar', 'email', 'email_verified_at', 'created_at')
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
-        // Search functionality
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // Filter by email verification status
-        if ($request->has('verified') && $request->verified !== '') {
-            if ($request->verified === '1') {
-                $query->whereNotNull('email_verified_at');
-            } elseif ($request->verified === '0') {
-                $query->whereNull('email_verified_at');
-            }
-        }
-
-        $users = $query->paginate(10)->withQueryString();
-
-        return Inertia::render('Dashboard/Users/Index', [
+        // render view
+        return inertia('Dashboard/Users/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'verified']),
+            'user' => Auth::user(),
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Dashboard/Users/Create');
+        // get all role data
+        $roles = Role::query()
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // render view
+        return inertia('Dashboard/Users/Create', [
+            'roles' => $roles,
+            'user' => Auth::user(),
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(UserRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        User::create([
+        // create new user data
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => bcrypt($request->password),
         ]);
 
-        return redirect()->route('dashboard.users.index')->with('success', 'User created successfully.');
-    }
+        // assign role to user
+        $user->assignRole($request->selectedRoles);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user): Response
-    {
-        return Inertia::render('Dashboard/Users/Show', [
-            'user' => $user,
-        ]);
+        // render view
+        return to_route('dashboard.users.index');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user): Response
+    public function edit(User $user)
     {
-        return Inertia::render('Dashboard/Users/Edit', [
-            'user' => $user,
+        // get all role data
+        $roles = Role::query()
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // load relationship
+        $user->load(['roles' => fn($query) => $query->select('id', 'name'), 'roles.permissions' => fn($query) => $query->select('id', 'name')]);
+
+        // render view
+        return inertia('Dashboard/Users/Edit', [
+            'roles' => $roles,
+            'user' => $user
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(UserRequest $request, User $user)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8|confirmed',
-        ]);
+        // check if user send request password
+        if ($request->password)
+            // update user data password
+            $user->update([
+                'password' => bcrypt($request->password),
+            ]);
 
+        // update user data name
         $user->update([
             'name' => $request->name,
-            'email' => $request->email,
         ]);
 
-        if ($request->filled('password')) {
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
-        }
+        // assign role to user
+        $user->syncRoles($request->selectedRoles);
 
-        return redirect()->route('dashboard.users.index')->with('success', 'User updated successfully.');
+        // render view
+        return to_route('dashboard.users.index');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(User $user)
+    {
+        // load relationship
+        $user->load(['roles' => fn($query) => $query->select('id', 'name'), 'roles.permissions' => fn($query) => $query->select('id', 'name')]);
+
+        // render view
+        return inertia('Dashboard/Users/Show', [
+            'user' => $user
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user): RedirectResponse
+    public function destroy($id)
     {
-        $user->delete();
+        $ids = explode(',', $id);
 
-        return redirect()->route('dashboard.users.index')->with('success', 'User deleted successfully.');
-    }
+        if (count($ids) > 0)
+            User::whereIn('id', $ids)->delete();
+        else
+            User::findOrFail($id)->delete();
 
-    /**
-     * Bulk delete users.
-     */
-    public function bulkDelete(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,id',
-        ]);
-
-        User::whereIn('id', $request->user_ids)->delete();
-
-        return redirect()->route('dashboard.users.index')->with('success', 'Selected users deleted successfully.');
+        // render view
+        return back();
     }
 }

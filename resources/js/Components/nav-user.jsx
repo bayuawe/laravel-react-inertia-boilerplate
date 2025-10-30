@@ -75,25 +75,25 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={route('dashboard.profile.edit')}>
-                <BadgeCheck />
+                <BadgeCheck className="pr-2" />
                 Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <CreditCard />
+                <CreditCard className="pr-2" />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Bell />
+                <Bell className="pr-2" />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={route('logout')} method="post">
-                <LogOut />
+                <LogOut className="pr-2" />
                 Log out
               </Link>
             </DropdownMenuItem>
